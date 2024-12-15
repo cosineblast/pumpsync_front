@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { create } from "zustand";
-import { errorMonitor } from "events";
+
+import run from "@/client";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -13,6 +14,7 @@ interface FormModel {
   youtubeUrl: string;
   gameplayVideo: File | null;
   errorMessage: string | null;
+  resultUrl: string | null;
 
   urlTyped: (url: string) => void;
   fileSelected: (element: any) => void;
@@ -26,10 +28,11 @@ const VALID_YOUTUBE_HOSTNAMES = [
   "www.youtu.be",
 ];
 
-const useFormModel = create<FormModel>((set) => ({
+const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
+  resultUrl: null,
 
   urlTyped: (urlText: string) => {
     if (urlText === "") {
@@ -73,10 +76,22 @@ const useFormModel = create<FormModel>((set) => ({
     }
   },
 
-  async sendVideo() {
-    if (this.errorMessage !== null) {
+  sendVideo: async() => {
+    const model = get();
+
+    if (model.errorMessage !== null) {
+      console.log("uhh")
       return;
     }
+
+    console.log("let's go")
+
+    console.log(model.gameplayVideo)
+    console.log(model.youtubeUrl)
+
+    const response = await run(model.youtubeUrl, model.gameplayVideo!)
+
+    set({resultUrl: response})
   },
 }));
 
@@ -89,9 +104,7 @@ function TopBar() {
 }
 
 function TheForm() {
-  const urlTyped = useFormModel((model) => model.urlTyped);
-  const fileSelected = useFormModel((model) => model.fileSelected);
-  const errorMessage = useFormModel((model) => model.errorMessage);
+  const model = useFormModel()
 
   return (
     <div className="flex justify-center mt-5 items-center grow">
@@ -99,7 +112,7 @@ function TheForm() {
         <div className="mb-5">
           <div> Youtube Video URL </div>
           <Input
-            onChange={(e) => urlTyped(e.target.value)}
+            onChange={(e) => model.urlTyped(e.target.value)}
             id="url"
             type="url"
           />
@@ -111,17 +124,25 @@ function TheForm() {
             id="video"
             type="file"
             accept=".mp4,mkv,.avi,.vid"
-            onChange={(e) => fileSelected(e.target)}
+            onChange={(e) => model.fileSelected(e.target)}
           />
         </div>
 
-        {errorMessage !== null ? (
-          <div className="mt-5 text-red"> {errorMessage} </div>
+        {model.errorMessage !== null ? (
+          <div className="mt-5 text-red"> {model.errorMessage} </div>
         ) : (
           <></>
         )}
 
-        <Button className="w-full mt-10"> Send </Button>
+        {
+          model.resultUrl !== null ? (
+            <a href={model.resultUrl}>
+            <Button className="w-full mt-10" variant="success"> Download </Button>
+            </a>
+          ):(
+          <Button className="w-full mt-10" onClick={() => model.sendVideo()}> Send </Button>
+          )
+        }
       </div>
     </div>
   );
