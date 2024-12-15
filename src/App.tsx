@@ -6,15 +6,25 @@ import { create } from "zustand";
 
 import run from "@/client";
 
+import { Loader2 } from "lucide-react";
+
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
 const MAX_FILE_SIZE_NAME = "512MiB";
+
+type ResultStatus =
+  | { status: "empty" }
+  | { status: "loading" }
+  | {
+      status: "done";
+      url: string;
+    };
 
 interface FormModel {
   youtubeUrl: string;
   gameplayVideo: File | null;
   errorMessage: string | null;
-  resultUrl: string | null;
+  resultStatus: ResultStatus;
 
   urlTyped: (url: string) => void;
   fileSelected: (element: any) => void;
@@ -32,7 +42,7 @@ const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
-  resultUrl: null,
+  resultStatus: { status: "empty" },
 
   urlTyped: (urlText: string) => {
     if (urlText === "") {
@@ -76,22 +86,24 @@ const useFormModel = create<FormModel>((set, get) => ({
     }
   },
 
-  sendVideo: async() => {
+  sendVideo: async () => {
     const model = get();
 
     if (model.errorMessage !== null) {
-      console.log("uhh")
+      console.log("uhh");
       return;
     }
 
-    console.log("let's go")
+    set({ resultStatus: { status: "loading" } });
 
-    console.log(model.gameplayVideo)
-    console.log(model.youtubeUrl)
+    console.log("let's go");
 
-    const response = await run(model.youtubeUrl, model.gameplayVideo!)
+    console.log(model.gameplayVideo);
+    console.log(model.youtubeUrl);
 
-    set({resultUrl: response})
+    const response = await run(model.youtubeUrl, model.gameplayVideo!);
+
+    set({ resultStatus: { status: "done", url: response } });
   },
 }));
 
@@ -104,7 +116,7 @@ function TopBar() {
 }
 
 function TheForm() {
-  const model = useFormModel()
+  const model = useFormModel();
 
   return (
     <div className="flex justify-center mt-5 items-center grow">
@@ -135,12 +147,24 @@ function TheForm() {
         )}
 
         {
-          model.resultUrl !== null ? (
-            <a href={model.resultUrl}>
-            <Button className="w-full mt-10" variant="success"> Download </Button>
+          // TODO: use pattern matching lib
+          model.resultStatus.status === "done" ? (
+            <a href={model.resultStatus.url}>
+              <Button className="w-full mt-10" variant="success">
+                {" "}
+                Download{" "}
+              </Button>
             </a>
-          ):(
-          <Button className="w-full mt-10" onClick={() => model.sendVideo()}> Send </Button>
+          ) : model.resultStatus.status === "loading" ? (
+            <Button className="w-full mt-10" disabled>
+              <Loader2 className="animate-spin" />
+              Loading...
+            </Button>
+          ) : (
+            <Button className="w-full mt-10" onClick={() => model.sendVideo()}>
+              {" "}
+              Send{" "}
+            </Button>
           )
         }
       </div>
