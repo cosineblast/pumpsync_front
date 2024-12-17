@@ -68,14 +68,17 @@ async function waitForOk(socket: WebSocket) {
   }
 }
 
-export default async function run(url: string, video: File): Promise<string> {
+export default async function run(
+  videoId: string,
+  video: File,
+): Promise<string> {
   const socket = await connectToEditServer();
 
   try {
     socket.send(
       JSON.stringify({
         type: "overwrite_audio",
-        link: url,
+        video_id: videoId,
         file_size: video.size,
       }),
     );

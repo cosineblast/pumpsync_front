@@ -9,6 +9,7 @@ import run from "@/client";
 import { Loader2 } from "lucide-react";
 
 import { match, P } from "ts-pattern";
+import { executionAsyncId } from "async_hooks";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -35,45 +36,26 @@ interface FormModel {
   resetStatus: () => void;
 }
 
-const VALID_YOUTUBE_HOSTNAMES = [
-  "youtube.com",
-  "youtu.be",
-  "www.youtube.com",
-  "www.youtu.be",
-];
-
 const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
   editStatus: { status: "none" },
 
-  urlTyped: (urlText: string) => {
-    if (urlText === "") {
+  urlTyped: (link: string) => {
+    if (link === "") {
       set({ errorMessage: null });
       return;
     }
 
-    let urlObject: URL | null = null;
-
-    try {
-      urlObject = new URL(urlText);
-    } catch {
-      urlObject = null;
-    }
-
-    if (urlObject == null) {
-      set({ errorMessage: "This url is sus" });
+    if (!looksLikeYoutubeLink(link)) {
+      set({
+        errorMessage: "This doesn't look like a valid youtube video link tbh",
+      });
       return;
     }
 
-    if (!VALID_YOUTUBE_HOSTNAMES.find((it) => it === urlObject.hostname)) {
-      console.log(urlObject.hostname);
-      set({ errorMessage: "This url doesn't seem to come from youtube :/" });
-      return;
-    }
-
-    set({ youtubeUrl: urlText, errorMessage: null });
+    set({ youtubeUrl: link, errorMessage: null });
   },
 
   fileSelected: (element: HTMLInputElement) => {
@@ -93,10 +75,13 @@ const useFormModel = create<FormModel>((set, get) => ({
   sendVideo: async () => {
     const model = get();
 
+    const videoId = extractVideoIdFromYoutubeLink(model.youtubeUrl);
+
     if (
       model.errorMessage !== null ||
       model.youtubeUrl == "" ||
-      model.gameplayVideo === null
+      model.gameplayVideo === null ||
+      videoId == null
     ) {
       console.log("uhh");
       return;
@@ -104,10 +89,10 @@ const useFormModel = create<FormModel>((set, get) => ({
 
     set({ editStatus: { status: "loading" } });
 
-    console.log("let's go");
+    console.log("LET'S GO");
 
     try {
-      const response = await run(model.youtubeUrl, model.gameplayVideo!);
+      const response = await run(videoId, model.gameplayVideo!);
 
       set({ editStatus: { status: "done", url: response } });
     } catch (error) {
@@ -120,6 +105,39 @@ const useFormModel = create<FormModel>((set, get) => ({
     set({ editStatus: { status: "none" } });
   },
 }));
+
+function looksLikeYoutubeLink(link: string): boolean {
+  return extractVideoIdFromYoutubeLink(link) !== null;
+}
+
+function extractVideoIdFromYoutubeLink(link: string): string | null {
+  let urlObject: URL;
+
+  try {
+    urlObject = new URL(link);
+  } catch {
+    return null;
+  }
+
+  const validHostnames = [
+    "youtube.com",
+    "youtu.be",
+    "www.youtube.com",
+    "www.youtu.be",
+  ];
+
+  if (!validHostnames.find((it) => it === urlObject.hostname)) {
+    return null;
+  }
+
+  if (urlObject.pathname === "/watch") {
+    return urlObject.searchParams.get("v");
+  }
+
+  // TODO: also handle other valid youtube schemes such as /v
+
+  return null;
+}
 
 function TopBar() {
   return (
