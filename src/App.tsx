@@ -8,6 +8,8 @@ import run from "@/client";
 
 import { Loader2 } from "lucide-react";
 
+import { match, P } from "ts-pattern";
+
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
 const MAX_FILE_SIZE_NAME = "512MiB";
@@ -18,7 +20,8 @@ type ResultStatus =
   | {
       status: "done";
       url: string;
-    };
+    }
+  | { status: "error" };
 
 interface FormModel {
   youtubeUrl: string;
@@ -89,7 +92,11 @@ const useFormModel = create<FormModel>((set, get) => ({
   sendVideo: async () => {
     const model = get();
 
-    if (model.errorMessage !== null) {
+    if (
+      model.errorMessage !== null ||
+      model.youtubeUrl == "" ||
+      model.gameplayVideo === null
+    ) {
       console.log("uhh");
       return;
     }
@@ -98,12 +105,14 @@ const useFormModel = create<FormModel>((set, get) => ({
 
     console.log("let's go");
 
-    console.log(model.gameplayVideo);
-    console.log(model.youtubeUrl);
+    try {
+      const response = await run(model.youtubeUrl, model.gameplayVideo!);
 
-    const response = await run(model.youtubeUrl, model.gameplayVideo!);
-
-    set({ resultStatus: { status: "done", url: response } });
+      set({ resultStatus: { status: "done", url: response } });
+    } catch (error) {
+      console.error(error);
+      set({ resultStatus: { status: "error" } });
+    }
   },
 }));
 
@@ -148,24 +157,35 @@ function TheForm() {
 
         {
           // TODO: use pattern matching lib
-          model.resultStatus.status === "done" ? (
-            <a href={model.resultStatus.url}>
-              <Button className="w-full mt-10" variant="success">
-                {" "}
-                Download{" "}
+          match(model.resultStatus)
+            .with({ status: "done", url: P.select() }, (url) => (
+              <a href={url}>
+                <Button className="w-full mt-10" variant="success">
+                  {" "}
+                  Download{" "}
+                </Button>
+              </a>
+            ))
+            .with({ status: "loading" }, () => (
+              <Button className="w-full mt-10" disabled>
+                <Loader2 className="animate-spin" />
+                Loading...
               </Button>
-            </a>
-          ) : model.resultStatus.status === "loading" ? (
-            <Button className="w-full mt-10" disabled>
-              <Loader2 className="animate-spin" />
-              Loading...
-            </Button>
-          ) : (
-            <Button className="w-full mt-10" onClick={() => model.sendVideo()}>
-              {" "}
-              Send{" "}
-            </Button>
-          )
+            ))
+            .with({ status: "error" }, () => (
+              <Button className="w-full mt-10" disabled variant="destructive">
+                Video Edit Failed x-x
+              </Button>
+            ))
+            .with({ status: "empty" }, () => (
+              <Button
+                className="w-full mt-10"
+                onClick={() => model.sendVideo()}
+              >
+                Edit
+              </Button>
+            ))
+            .exhaustive()
         }
       </div>
     </div>

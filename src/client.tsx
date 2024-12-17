@@ -1,10 +1,15 @@
-import { finalization } from "process";
+const endpoint = "ws://127.0.0.1:1323/edit";
 
-const endpoint = "ws://127.0.0.1:1323/run";
-
-function connect(url: string): Promise<WebSocket> {
+function connectToEditServer(): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket(endpoint);
+    let socket: WebSocket;
+
+    try {
+      socket = new WebSocket(endpoint);
+    } catch (error) {
+      reject(error);
+      return;
+    }
 
     const errorListener = (error: any) => {
       socket.removeEventListener("error", errorListener);
@@ -54,9 +59,7 @@ async function waitForOk(socket: WebSocket) {
 }
 
 export default async function run(url: string, video: File): Promise<string> {
-  const socket = await connect(url);
-
-  console.log("alright?");
+  const socket = await connectToEditServer();
 
   try {
     socket.send(
