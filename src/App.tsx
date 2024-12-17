@@ -14,8 +14,8 @@ const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
 const MAX_FILE_SIZE_NAME = "512MiB";
 
-type ResultStatus =
-  | { status: "empty" }
+type EditStatus =
+  | { status: "none" }
   | { status: "loading" }
   | {
       status: "done";
@@ -27,11 +27,12 @@ interface FormModel {
   youtubeUrl: string;
   gameplayVideo: File | null;
   errorMessage: string | null;
-  resultStatus: ResultStatus;
+  editStatus: EditStatus;
 
   urlTyped: (url: string) => void;
   fileSelected: (element: any) => void;
   sendVideo: () => Promise<void>;
+  resetStatus: () => void;
 }
 
 const VALID_YOUTUBE_HOSTNAMES = [
@@ -45,7 +46,7 @@ const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
-  resultStatus: { status: "empty" },
+  editStatus: { status: "none" },
 
   urlTyped: (urlText: string) => {
     if (urlText === "") {
@@ -101,18 +102,22 @@ const useFormModel = create<FormModel>((set, get) => ({
       return;
     }
 
-    set({ resultStatus: { status: "loading" } });
+    set({ editStatus: { status: "loading" } });
 
     console.log("let's go");
 
     try {
       const response = await run(model.youtubeUrl, model.gameplayVideo!);
 
-      set({ resultStatus: { status: "done", url: response } });
+      set({ editStatus: { status: "done", url: response } });
     } catch (error) {
       console.error(error);
-      set({ resultStatus: { status: "error" } });
+      set({ editStatus: { status: "error" } });
     }
+  },
+
+  resetStatus: () => {
+    set({ editStatus: { status: "none" } });
   },
 }));
 
@@ -157,7 +162,7 @@ function TheForm() {
 
         {
           // TODO: use pattern matching lib
-          match(model.resultStatus)
+          match(model.editStatus)
             .with({ status: "done", url: P.select() }, (url) => (
               <a href={url}>
                 <Button className="w-full mt-10" variant="success">
@@ -173,11 +178,17 @@ function TheForm() {
               </Button>
             ))
             .with({ status: "error" }, () => (
-              <Button className="w-full mt-10" disabled variant="destructive">
-                Video Edit Failed x-x
-              </Button>
+              <div>
+                <Button className="w-full mt-10" disabled variant="destructive">
+                  Video Edit Failed x-x
+                </Button>
+
+                <Button onClick={model.resetStatus} variant="ghost">
+                  <small> I want to try again! </small>
+                </Button>
+              </div>
             ))
-            .with({ status: "empty" }, () => (
+            .with({ status: "none" }, () => (
               <Button
                 className="w-full mt-10"
                 onClick={() => model.sendVideo()}

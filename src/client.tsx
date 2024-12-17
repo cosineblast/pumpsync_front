@@ -1,4 +1,4 @@
-const endpoint = "ws://127.0.0.1:1323/edit";
+const endpoint = "ws://127.0.0.1:1323/api/edit";
 
 function connectToEditServer(): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
@@ -34,17 +34,27 @@ function nextMessage(socket: WebSocket): Promise<any> {
     const messageListener = (event: MessageEvent<any>) => {
       socket.removeEventListener("error", errorListener!);
       socket.removeEventListener("message", messageListener);
+      socket.removeEventListener("close", closeListener);
       resolve(event.data);
     };
 
     errorListener = (error: any) => {
       socket.removeEventListener("error", errorListener!);
       socket.removeEventListener("message", messageListener);
+      socket.removeEventListener("close", closeListener);
       reject(error);
+    };
+
+    const closeListener = () => {
+      socket.removeEventListener("error", errorListener!);
+      socket.removeEventListener("message", messageListener);
+      socket.removeEventListener("close", closeListener);
+      reject(new Error("Websocket connection was closed abruptly"));
     };
 
     socket.addEventListener("message", messageListener);
     socket.addEventListener("error", errorListener);
+    socket.addEventListener("close", closeListener);
   });
 }
 
