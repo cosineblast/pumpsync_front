@@ -1,11 +1,14 @@
-const endpoint = "ws://127.0.0.1:1323/api/edit";
+const backendPrefix =
+  import.meta.env["VITE_BACKEND_PREFIX"] ?? "ws://127.0.0.1:8000";
+
+const editEndpoint = `${backendPrefix}/api/edit`;
 
 function connectToEditServer(): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     let socket: WebSocket;
 
     try {
-      socket = new WebSocket(endpoint);
+      socket = new WebSocket(editEndpoint);
     } catch (error) {
       reject(error);
       return;
