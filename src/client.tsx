@@ -1,3 +1,6 @@
+
+import * as E from 'fp-ts/Either'
+
 const backendPrefix =
   import.meta.env["VITE_BACKEND_PREFIX"] ?? "ws://127.0.0.1:8000";
 
@@ -71,10 +74,13 @@ async function waitForOk(socket: WebSocket) {
   }
 }
 
+// TODO: consider using fp-ts TaskEither
+//
 export default async function run(
   videoId: string,
   video: File,
-): Promise<string> {
+): Promise<E.Either<'locate_failed', string>> {
+
   const socket = await connectToEditServer();
 
   try {
@@ -90,13 +96,18 @@ export default async function run(
 
     await waitForOk(socket);
 
-    const response = JSON.parse(await nextMessage(socket));
+    // TODO: use zod
+    const response: any = JSON.parse(await nextMessage(socket));
 
     if (response["status"] != "done") {
-      throw new Error("ws error:" + response["error"]);
+        if (response["status"] === "error" && response["error"] == "edit_locate_failed") {
+            return E.left('locate_failed');
+        }
+
+        throw new Error("response error:" + response["error"]);
     }
 
-    return response["result_id"];
+    return E.right(response["result_id"]);
   } finally {
     socket.close();
   }

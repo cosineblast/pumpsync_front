@@ -9,7 +9,9 @@ import run from "@/client";
 import { Loader2 } from "lucide-react";
 
 import { match, P } from "ts-pattern";
-import { executionAsyncId } from "async_hooks";
+
+import * as E from 'fp-ts/Either'
+import { pipe } from 'fp-ts/function'
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -22,6 +24,7 @@ type EditStatus =
       status: "done";
       url: string;
     }
+  | { status: "audio_locate_failed" }
   | { status: "error" };
 
 interface FormModel {
@@ -40,7 +43,7 @@ const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
-  editStatus: { status: "none" },
+  editStatus: { status: "audio_locate_failed" },
 
   urlTyped: (link: string) => {
     if (link === "") {
@@ -92,9 +95,13 @@ const useFormModel = create<FormModel>((set, get) => ({
     console.log("LET'S GO");
 
     try {
-      const response = await run(videoId, model.gameplayVideo!);
-
-      set({ editStatus: { status: "done", url: response } });
+      pipe(
+        await run(videoId, model.gameplayVideo!),
+        E.match(
+          (_err) => set({ editStatus: { status: 'audio_locate_failed' }}),
+          (downloadLink) => set({ editStatus: { status: "done", url: downloadLink } })
+        )
+      );
     } catch (error) {
       console.error(error);
       set({ editStatus: { status: "error" } });
@@ -152,7 +159,7 @@ function TheForm() {
 
   return (
     <div className="flex justify-center mt-5 items-center grow">
-      <div className="w-full mx-3 sm:max-w-96 lg:min-w-96 bg-zinc-800 rounded-md p-5">
+      <div className="w-full mx-3 sm:max-w-96 lg:min-w-96 bg-zinc-900 rounded-md p-5">
         <div className="mb-5">
           <div> Youtube Video URL </div>
           <Input
@@ -201,7 +208,7 @@ function TheForm() {
                   Video Edit Failed x-x
                 </Button>
 
-                <Button onClick={model.resetStatus} variant="ghost">
+                <Button onClick={model.resetStatus} variant="secondary">
                   <small> I want to try again! </small>
                 </Button>
               </div>
@@ -214,6 +221,26 @@ function TheForm() {
                 Edit
               </Button>
             ))
+            .with({ status: "audio_locate_failed"}, () => 
+                (<div>
+                 <Button
+                 className="w-full mt-10"
+                 disabled
+                 >
+                 Not gonna happen.
+                 </Button>
+
+                 <div>
+                 <small> I tried, but I can't hear the music in the gameplay video at all, sorry. </small>
+                 </div>
+
+                <Button className="w-full mt-2" onClick={model.resetStatus} variant="secondary">
+                  <small> Try another video </small>
+                </Button>
+                 </div>
+
+
+                ))
             .exhaustive()
         }
       </div>
