@@ -43,7 +43,7 @@ const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
-  editStatus: { status: "audio_locate_failed" },
+  editStatus: { status: "none" },
 
   urlTyped: (link: string) => {
     if (link === "") {

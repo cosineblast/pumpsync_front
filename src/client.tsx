@@ -1,6 +1,10 @@
 
 import * as E from 'fp-ts/Either'
 
+import * as z from 'zod';
+
+import { match, P } from "ts-pattern";
+
 const backendPrefix =
   import.meta.env["VITE_BACKEND_PREFIX"] ?? "ws://127.0.0.1:8000";
 
@@ -74,8 +78,28 @@ async function waitForOk(socket: WebSocket) {
   }
 }
 
-// TODO: consider using fp-ts TaskEither
-//
+const StatusMessage = z.discriminatedUnion('status', [
+    z.object({status: z.literal("ok")}),
+
+    z.object({
+        status: z.literal("error"), 
+        error: z.enum(["file_too_big", 
+                      "parse_error",
+                      "negative_size",
+                      "protocol_violation",
+                      "server_error",
+                      "edit_failed",
+                      "edit_locate_failed"])
+    }),
+
+    z.object({
+        status: z.literal("done"),
+        result_id: z.string()
+    })
+]);
+
+ 
+
 export default async function run(
   videoId: string,
   video: File,
@@ -97,17 +121,23 @@ export default async function run(
     await waitForOk(socket);
 
     // TODO: use zod
-    const response: any = JSON.parse(await nextMessage(socket));
+    const response = StatusMessage.parse(JSON.parse(await nextMessage(socket)));
 
-    if (response["status"] != "done") {
-        if (response["status"] === "error" && response["error"] == "edit_locate_failed") {
-            return E.left('locate_failed');
-        }
+    return match(response).with({ status: 'error', error: 'edit_locate_failed' }, () => {
+        return E.left('locate_failed' as const);
+    })
+    .with({ status: 'error', error: P.select() }, tag => {
+        throw new Error("response error:" + tag);
+    })
+    .with({ status: 'ok'}, () => {
+        throw new Error("server protocol violation");
+    })
+    .with({ status: 'done', result_id: P.select() }, id => {
+        return E.right(id);
+    })
+    .exhaustive();
 
-        throw new Error("response error:" + response["error"]);
-    }
 
-    return E.right(response["result_id"]);
   } finally {
     socket.close();
   }
