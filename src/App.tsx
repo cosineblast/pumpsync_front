@@ -39,6 +39,20 @@ interface FormModel {
   resetStatus: () => void;
 }
 
+function canEdit(model: FormModel): boolean {
+
+  const videoId = extractVideoIdFromYoutubeLink(model.youtubeUrl);
+
+  if (model.errorMessage !== null ||
+      model.youtubeUrl == "" ||
+      model.gameplayVideo === null ||
+      videoId == null) {
+    return false;
+  }
+
+  return true;
+}
+
 const useFormModel = create<FormModel>((set, get) => ({
   editStatus: { status: "none" },
   youtubeUrl: "",
@@ -146,6 +160,7 @@ function extractVideoIdFromYoutubeLink(link: string): string | null {
   return null;
 }
 
+
 function TopBar() {
   const base = import.meta.env.BASE_URL;
 
@@ -190,7 +205,9 @@ function TheForm() {
         </div>
 
         {model.errorMessage !== null ? (
-          <div className="mt-5 text-red"> {model.errorMessage} </div>
+          <div className="mt-5 text-red"> 
+          {model.errorMessage}
+          </div>
         ) : (
           <></>
         )}
@@ -227,6 +244,7 @@ function TheForm() {
               <Button
                 className="w-full mt-10"
                 onClick={() => model.sendVideo()}
+                disabled={!canEdit(model)}
               >
                 Edit
               </Button>
