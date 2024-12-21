@@ -40,10 +40,10 @@ interface FormModel {
 }
 
 const useFormModel = create<FormModel>((set, get) => ({
+  editStatus: { status: "none" },
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
-  editStatus: { status: "none" },
 
   urlTyped: (link: string) => {
     if (link === "") {
@@ -208,7 +208,7 @@ function TheForm() {
                   Video Edit Failed x-x
                 </Button>
 
-                <Button onClick={model.resetStatus} variant="secondary">
+                <Button className="mt-3" onClick={model.resetStatus} variant="secondary">
                   <small> I want to try again! </small>
                 </Button>
               </div>
@@ -221,7 +221,7 @@ function TheForm() {
                 Edit
               </Button>
             ))
-            .with({ status: "audio_locate_failed"}, () => 
+            .with({ status: "audio_locate_failed"}, () =>
                 (<div>
                  <Button
                  className="w-full mt-10"
