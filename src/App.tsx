@@ -7,7 +7,7 @@ import { About } from "./About";
 function getBase() {
   const rawBase = import.meta.env.BASE_URL;
 
-  return rawBase == '/' ? '' : rawBase;
+  return rawBase == "/" ? "" : rawBase;
 }
 
 function TopBar() {
@@ -15,19 +15,13 @@ function TopBar() {
 
   return (
     <div className="flex justify-center pt-2 text-5xl pb-2 text-center h-20">
-      <img
-        src={`${base}/ps_down_left.svg`}
-        className="hidden sm:block"
-      />
+      <img src={`${base}/ps_down_left.svg`} className="hidden sm:block" />
       <img src={`${base}/ps_up_left.svg`} className="hidden sm:block" />
 
       <div className="mr-10 ml-10 text-yellow-300 font-bold"> PumpSync </div>
 
       <img src={`${base}/ps_up_right.svg`} className="hidden sm:block" />
-      <img
-        src={`${base}/ps_down_right.svg`}
-        className="hidden sm:block"
-      />
+      <img src={`${base}/ps_down_right.svg`} className="hidden sm:block" />
     </div>
   );
 }

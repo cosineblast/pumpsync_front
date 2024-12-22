@@ -13,6 +13,7 @@ import { match, P } from "ts-pattern";
 
 import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
+import { parseYoutubeLink } from "./parseYoutube";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -41,7 +42,7 @@ interface FormModel {
 }
 
 function canEdit(model: FormModel): boolean {
-  const videoId = extractVideoIdFromYoutubeLink(model.youtubeUrl);
+  const videoId = parseYoutubeLink(model.youtubeUrl);
 
   if (
     model.errorMessage !== null ||
@@ -56,7 +57,7 @@ function canEdit(model: FormModel): boolean {
 }
 
 const useFormModel = create<FormModel>((set, get) => ({
-  editStatus: { status: "none" },
+  editStatus: { status: "done", url: "bruh" },
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
@@ -94,7 +95,7 @@ const useFormModel = create<FormModel>((set, get) => ({
   sendVideo: async () => {
     const model = get();
 
-    const videoId = extractVideoIdFromYoutubeLink(model.youtubeUrl);
+    const videoId = parseYoutubeLink(model.youtubeUrl);
 
     if (
       model.errorMessage !== null ||
@@ -131,36 +132,7 @@ const useFormModel = create<FormModel>((set, get) => ({
 }));
 
 function looksLikeYoutubeLink(link: string): boolean {
-  return extractVideoIdFromYoutubeLink(link) !== null;
-}
-
-function extractVideoIdFromYoutubeLink(link: string): string | null {
-  let urlObject: URL;
-
-  try {
-    urlObject = new URL(link);
-  } catch {
-    return null;
-  }
-
-  const validHostnames = [
-    "youtube.com",
-    "youtu.be",
-    "www.youtube.com",
-    "www.youtu.be",
-  ];
-
-  if (!validHostnames.find((it) => it === urlObject.hostname)) {
-    return null;
-  }
-
-  if (urlObject.pathname === "/watch") {
-    return urlObject.searchParams.get("v");
-  }
-
-  // TODO: also handle other valid youtube schemes such as /v
-
-  return null;
+  return parseYoutubeLink(link) !== null;
 }
 
 export function TheForm() {
