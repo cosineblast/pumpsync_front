@@ -33,7 +33,7 @@ function TopBar() {
 }
 
 function BottomBar() {
-  const base = import.meta.env.BASE_URL;
+  const base = getBase();
 
   return (
     <div className="flex justify-evenly border-t gap-5 py-2">
@@ -59,7 +59,7 @@ function BottomBar() {
 }
 
 function App() {
-  const base = import.meta.env.BASE_URL;
+  const base = getBase();
 
   return (
     <BrowserRouter>
