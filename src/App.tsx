@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { create } from "zustand";
 
@@ -13,6 +13,7 @@ import { match, P } from "ts-pattern";
 
 import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
+import { BrowserRouter, Routes, Route, NavLink } from "react-router";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -212,12 +213,10 @@ function TheForm() {
 
         {model.errorMessage !== null ? (
           <div className="mt-5 text-red">
-
-          <Alert>
-          <TriangleAlert className="h-4 w-4" />
-          <AlertDescription> {model.errorMessage} </AlertDescription>
-          </Alert>
-
+            <Alert>
+              <TriangleAlert className="h-4 w-4" />
+              <AlertDescription> {model.errorMessage} </AlertDescription>
+            </Alert>
           </div>
         ) : (
           <></>
@@ -295,34 +294,51 @@ function TheForm() {
 }
 
 function BottomBar() {
+  const base = import.meta.env.BASE_URL;
+
   return (
     <div className="flex justify-evenly border-t gap-5 py-2">
-      <div className="flex flex-col items-center">
-        <div>
-          <Disc />
+      <NavLink to={base}>
+        <div className="flex flex-col items-center">
+          <div>
+            <Disc />
+          </div>
+          <div>Sync</div>
         </div>
-        <div>Sync</div>
-      </div>
+      </NavLink>
 
-      <div className="flex flex-col items-center">
-        <div>
-          <Info />
+      <NavLink to={`${base}/about`}>
+        <div className="flex flex-col items-center">
+          <div>
+            <Info />
+          </div>
+          <div>About</div>
         </div>
-        <div>About</div>
-      </div>
+      </NavLink>
     </div>
   );
 }
 
+function About() {
+  return <div className="grow">todo: add info</div>;
+}
+
 function App() {
+  const base = import.meta.env.BASE_URL;
+
   return (
-    <div className="h-screen flex flex-col">
-      <TopBar />
+    <BrowserRouter>
+      <div className="h-screen flex flex-col">
+        <TopBar />
 
-      <TheForm />
+        <Routes>
+          <Route path={base} element={<TheForm />} />
+          <Route path={`${base}/about`} element={<About />} />
+        </Routes>
 
-      <BottomBar />
-    </div>
+        <BottomBar />
+      </div>
+    </BrowserRouter>
   );
 }
 
