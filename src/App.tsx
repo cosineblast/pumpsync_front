@@ -10,8 +10,8 @@ import { Loader2, Info, Disc } from "lucide-react";
 
 import { match, P } from "ts-pattern";
 
-import * as E from 'fp-ts/Either'
-import { pipe } from 'fp-ts/function'
+import * as E from "fp-ts/Either";
+import { pipe } from "fp-ts/function";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -40,13 +40,14 @@ interface FormModel {
 }
 
 function canEdit(model: FormModel): boolean {
-
   const videoId = extractVideoIdFromYoutubeLink(model.youtubeUrl);
 
-  if (model.errorMessage !== null ||
-      model.youtubeUrl == "" ||
-      model.gameplayVideo === null ||
-      videoId == null) {
+  if (
+    model.errorMessage !== null ||
+    model.youtubeUrl == "" ||
+    model.gameplayVideo === null ||
+    videoId == null
+  ) {
     return false;
   }
 
@@ -112,9 +113,10 @@ const useFormModel = create<FormModel>((set, get) => ({
       pipe(
         await run(videoId, model.gameplayVideo!),
         E.match(
-          (_err) => set({ editStatus: { status: 'audio_locate_failed' }}),
-          (downloadLink) => set({ editStatus: { status: "done", url: downloadLink } })
-        )
+          (_err) => set({ editStatus: { status: "audio_locate_failed" } }),
+          (downloadLink) =>
+            set({ editStatus: { status: "done", url: downloadLink } }),
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -160,21 +162,24 @@ function extractVideoIdFromYoutubeLink(link: string): string | null {
   return null;
 }
 
-
 function TopBar() {
   const base = import.meta.env.BASE_URL;
 
   return (
     <div className="flex justify-center pt-2 text-5xl pb-2 text-center h-20">
-
-      <img src={`${base}/public/ps_down_left.svg`} className="hidden sm:block"/>
-      <img src={`${base}/public/ps_up_left.svg`} className="hidden sm:block"/>
+      <img
+        src={`${base}/public/ps_down_left.svg`}
+        className="hidden sm:block"
+      />
+      <img src={`${base}/public/ps_up_left.svg`} className="hidden sm:block" />
 
       <div className="mr-10 ml-10 text-yellow-900 font-bold"> PumpSync </div>
 
-      <img src={`${base}/public/ps_up_right.svg` } className="hidden sm:block"/>
-      <img src={`${base}/public/ps_down_right.svg`} className="hidden sm:block"/>
-
+      <img src={`${base}/public/ps_up_right.svg`} className="hidden sm:block" />
+      <img
+        src={`${base}/public/ps_down_right.svg`}
+        className="hidden sm:block"
+      />
     </div>
   );
 }
@@ -205,9 +210,7 @@ function TheForm() {
         </div>
 
         {model.errorMessage !== null ? (
-          <div className="mt-5 text-red"> 
-          {model.errorMessage}
-          </div>
+          <div className="mt-5 text-red">{model.errorMessage}</div>
         ) : (
           <></>
         )}
@@ -235,7 +238,11 @@ function TheForm() {
                   Video Edit Failed x-x
                 </Button>
 
-                <Button className="mt-3" onClick={model.resetStatus} variant="secondary">
+                <Button
+                  className="mt-3"
+                  onClick={model.resetStatus}
+                  variant="secondary"
+                >
                   <small> I want to try again! </small>
                 </Button>
               </div>
@@ -249,26 +256,29 @@ function TheForm() {
                 Edit
               </Button>
             ))
-            .with({ status: "audio_locate_failed"}, () =>
-                (<div>
-                 <Button
-                 className="w-full mt-10"
-                 disabled
-                 >
-                 Not gonna happen.
-                 </Button>
+            .with({ status: "audio_locate_failed" }, () => (
+              <div>
+                <Button className="w-full mt-10" disabled>
+                  Not gonna happen.
+                </Button>
 
-                 <div>
-                 <small> I tried, but I can't hear the music in the gameplay video at all, sorry. </small>
-                 </div>
+                <div>
+                  <small>
+                    {" "}
+                    I tried, but I can't hear the music in the gameplay video at
+                    all, sorry.{" "}
+                  </small>
+                </div>
 
-                <Button className="w-full mt-2" onClick={model.resetStatus} variant="secondary">
+                <Button
+                  className="w-full mt-2"
+                  onClick={model.resetStatus}
+                  variant="secondary"
+                >
                   <small> Try another video </small>
                 </Button>
-                 </div>
-
-
-                ))
+              </div>
+            ))
             .exhaustive()
         }
       </div>
@@ -277,27 +287,23 @@ function TheForm() {
 }
 
 function BottomBar() {
-
-  return <div className="flex justify-evenly border-t gap-5 py-2">
-
+  return (
+    <div className="flex justify-evenly border-t gap-5 py-2">
       <div className="flex flex-col items-center">
-      <div>
-        <Disc />
-      </div>
-      <div>
-      Sync
-      </div>
+        <div>
+          <Disc />
+        </div>
+        <div>Sync</div>
       </div>
 
       <div className="flex flex-col items-center">
-      <div>
-        <Info />
+        <div>
+          <Info />
+        </div>
+        <div>About</div>
       </div>
-      <div>
-      About
-      </div>
-      </div>
-      </div>
+    </div>
+  );
 }
 
 function App() {

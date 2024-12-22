@@ -1,7 +1,6 @@
+import * as E from "fp-ts/Either";
 
-import * as E from 'fp-ts/Either'
-
-import * as z from 'zod';
+import * as z from "zod";
 
 import { match, P } from "ts-pattern";
 
@@ -78,33 +77,32 @@ async function waitForOk(socket: WebSocket) {
   }
 }
 
-const StatusMessage = z.discriminatedUnion('status', [
-    z.object({status: z.literal("ok")}),
+const StatusMessage = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("ok") }),
 
-    z.object({
-        status: z.literal("error"), 
-        error: z.enum(["file_too_big", 
-                      "parse_error",
-                      "negative_size",
-                      "protocol_violation",
-                      "server_error",
-                      "edit_failed",
-                      "edit_locate_failed"])
-    }),
+  z.object({
+    status: z.literal("error"),
+    error: z.enum([
+      "file_too_big",
+      "parse_error",
+      "negative_size",
+      "protocol_violation",
+      "server_error",
+      "edit_failed",
+      "edit_locate_failed",
+    ]),
+  }),
 
-    z.object({
-        status: z.literal("done"),
-        result_id: z.string()
-    })
+  z.object({
+    status: z.literal("done"),
+    result_id: z.string(),
+  }),
 ]);
-
- 
 
 export default async function run(
   videoId: string,
   video: File,
-): Promise<E.Either<'locate_failed', string>> {
-
+): Promise<E.Either<"locate_failed", string>> {
   const socket = await connectToEditServer();
 
   try {
@@ -123,21 +121,20 @@ export default async function run(
     // TODO: use zod
     const response = StatusMessage.parse(JSON.parse(await nextMessage(socket)));
 
-    return match(response).with({ status: 'error', error: 'edit_locate_failed' }, () => {
-        return E.left('locate_failed' as const);
-    })
-    .with({ status: 'error', error: P.select() }, tag => {
+    return match(response)
+      .with({ status: "error", error: "edit_locate_failed" }, () => {
+        return E.left("locate_failed" as const);
+      })
+      .with({ status: "error", error: P.select() }, (tag) => {
         throw new Error("response error:" + tag);
-    })
-    .with({ status: 'ok'}, () => {
+      })
+      .with({ status: "ok" }, () => {
         throw new Error("server protocol violation");
-    })
-    .with({ status: 'done', result_id: P.select() }, id => {
+      })
+      .with({ status: "done", result_id: P.select() }, (id) => {
         return E.right(id);
-    })
-    .exhaustive();
-
-
+      })
+      .exhaustive();
   } finally {
     socket.close();
   }

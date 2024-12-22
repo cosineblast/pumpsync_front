@@ -4,7 +4,7 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/pumpsync_front',
+  base: "/pumpsync_front",
 
   plugins: [react()],
 
