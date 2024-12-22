@@ -1,12 +1,13 @@
 import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { create } from "zustand";
 
 import run from "@/client";
 
-import { Loader2, Info, Disc } from "lucide-react";
+import { Loader2, Info, Disc, TriangleAlert } from "lucide-react";
 
 import { match, P } from "ts-pattern";
 
@@ -68,7 +69,7 @@ const useFormModel = create<FormModel>((set, get) => ({
 
     if (!looksLikeYoutubeLink(link)) {
       set({
-        errorMessage: "This doesn't look like a valid youtube video link tbh",
+        errorMessage: "This doesn't look like a valid youtube video link",
       });
       return;
     }
@@ -210,7 +211,14 @@ function TheForm() {
         </div>
 
         {model.errorMessage !== null ? (
-          <div className="mt-5 text-red">{model.errorMessage}</div>
+          <div className="mt-5 text-red">
+
+          <Alert>
+          <TriangleAlert className="h-4 w-4" />
+          <AlertDescription> {model.errorMessage} </AlertDescription>
+          </Alert>
+
+          </div>
         ) : (
           <></>
         )}
