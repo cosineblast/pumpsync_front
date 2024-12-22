@@ -59,7 +59,7 @@ export function About() {
         appreciate if you didn't overload the backend or things like that.
       </p>
 
-      <p className="mt-5"> ~ Renan Ribeiro / manatinho / cosineblast </p>
+      <p className="mt-5 mb-10"> ~ Renan Ribeiro / manatinho / cosineblast </p>
     </div>
   );
 }

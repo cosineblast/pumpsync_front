@@ -15,7 +15,7 @@ function TopBar() {
       />
       <img src={`${base}/ps_up_left.svg`} className="hidden sm:block" />
 
-      <div className="mr-10 ml-10 text-yellow-900 font-bold"> PumpSync </div>
+      <div className="mr-10 ml-10 text-yellow-300 font-bold"> PumpSync </div>
 
       <img src={`${base}/ps_up_right.svg`} className="hidden sm:block" />
       <img
