@@ -157,7 +157,10 @@ export function TheForm() {
             type="file"
             accept=".mp4,mkv,.avi,.vid"
             onChange={(e) => model.fileSelected(e.target)}
+
           />
+
+          <small> Max filesize: 500MB </small>
         </div>
 
         {model.errorMessage !== null ? (
