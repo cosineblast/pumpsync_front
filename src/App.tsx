@@ -6,7 +6,7 @@ import { create } from "zustand";
 
 import run from "@/client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Info, Disc } from "lucide-react";
 
 import { match, P } from "ts-pattern";
 
@@ -167,13 +167,13 @@ function TopBar() {
   return (
     <div className="flex justify-center pt-2 text-5xl pb-2 text-center h-20">
 
-      <img src={`${base}/public/ps_down_left.svg`} className=""/>
-      <img src={`${base}/public/ps_up_left.svg`} className=""/>
+      <img src={`${base}/public/ps_down_left.svg`} className="hidden sm:block"/>
+      <img src={`${base}/public/ps_up_left.svg`} className="hidden sm:block"/>
 
       <div className="mr-10 ml-10 text-yellow-900 font-bold"> PumpSync </div>
 
-      <img src={`${base}/public/ps_up_right.svg` } className=""/>
-      <img src={`${base}/public/ps_down_right.svg`} className=""/>
+      <img src={`${base}/public/ps_up_right.svg` } className="hidden sm:block"/>
+      <img src={`${base}/public/ps_down_right.svg`} className="hidden sm:block"/>
 
     </div>
   );
@@ -276,12 +276,38 @@ function TheForm() {
   );
 }
 
+function BottomBar() {
+
+  return <div className="flex justify-evenly border-t gap-5 py-2">
+
+      <div className="flex flex-col items-center">
+      <div>
+        <Disc />
+      </div>
+      <div>
+      Sync
+      </div>
+      </div>
+
+      <div className="flex flex-col items-center">
+      <div>
+        <Info />
+      </div>
+      <div>
+      About
+      </div>
+      </div>
+      </div>
+}
+
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       <TopBar />
 
       <TheForm />
+
+      <BottomBar />
     </div>
   );
 }
