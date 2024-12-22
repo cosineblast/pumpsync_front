@@ -208,6 +208,10 @@ export function TheForm() {
                   {" "}
                   Download{" "}
                 </Button>
+
+                <div className="text-center">
+                  <small>Note: This link will expire after 20 minutes.</small>
+                </div>
               </a>
             ))
             .with({ status: "loading" }, () => (
