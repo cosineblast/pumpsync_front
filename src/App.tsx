@@ -4,8 +4,14 @@ import { BrowserRouter, Routes, Route, NavLink } from "react-router";
 import { TheForm } from "./TheForm";
 import { About } from "./About";
 
+function getBase() {
+  const rawBase = import.meta.env.BASE_URL;
+
+  return rawBase == '/' ? '' : rawBase;
+}
+
 function TopBar() {
-  const base = import.meta.env.BASE_URL;
+  const base = getBase();
 
   return (
     <div className="flex justify-center pt-2 text-5xl pb-2 text-center h-20">
