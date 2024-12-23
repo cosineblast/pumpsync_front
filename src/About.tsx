@@ -14,10 +14,16 @@ export function About() {
         locate that audio in the video, overwrite it, and send it back to you.
       </p>
 
+      <p className="mb-2">
+        It also supports youtube videos with some menu screen and score screen UI audio before
+        and after the music (e.g NEVSISTER videos). 
+
+        The service will try to locate those and trim them out, if the UI happens to be fom XX or Phoenix.
+      </p>
+
       <p>
-        {" "}
         This project is still early in development, so you can expect plenty of
-        bugs and a lot of downtime.{" "}
+        bugs and a lot of downtime.
       </p>
 
       <p className="mt-5">
