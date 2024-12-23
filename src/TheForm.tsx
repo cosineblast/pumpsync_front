@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { create } from "zustand";
 
-import run from "@/client";
+import run, { UpdateStage } from "@/client";
 
 import { Loader2, TriangleAlert } from "lucide-react";
 
@@ -21,7 +21,7 @@ const MAX_FILE_SIZE_NAME = "512MiB";
 
 type EditStatus =
   | { status: "none" }
-  | { status: "loading" }
+  | { status: "loading", stage: UpdateStage | null }
   | {
       status: "done";
       url: string;
@@ -109,13 +109,17 @@ const useFormModel = create<FormModel>((set, get) => ({
       return;
     }
 
-    set({ editStatus: { status: "loading" } });
+    set({ editStatus: { status: "loading", stage: null } });
 
     console.log("LET'S GO");
 
     try {
       pipe(
-        await run(videoId, model.gameplayVideo!),
+        await run(videoId, 
+                  model.gameplayVideo,
+                 (stage) => {
+                     set({ editStatus: { status: 'loading', stage: stage }})
+                 }),
         E.match(
           reason => 
           match(reason)
@@ -200,10 +204,17 @@ export function TheForm() {
                 </div>
               </a>
             ))
-            .with({ status: "loading" }, () => (
+            .with({ status: "loading", stage: P.select() }, stage => (
               <Button className="w-full mt-10" disabled>
                 <Loader2 className="animate-spin" />
-                Loading...
+
+                {
+                    match(stage)
+                    .with(null, () => '...')
+                    .with('upload', () => 'Uploading...')
+                    .with('edit', () => 'Editing...')
+                    .exhaustive()
+                }
               </Button>
             ))
             .with({ status: "error" }, () => (

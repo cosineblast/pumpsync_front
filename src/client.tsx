@@ -102,9 +102,16 @@ const StatusMessage = z.discriminatedUnion("status", [
 
 type EditAbortedReason = "locate_failed" | "download_failed";
 
+
+// right now, we are going to go with a generic 'edit' stage,
+// but in the future this may be more sophisticated
+// (e.g extracting audio, detecting phoenix or XX start etc)
+export type UpdateStage = 'upload' | 'edit';
+
 export default async function run(
   videoId: string,
   video: File,
+  onStageUpdate: (update: UpdateStage) => void,
 ): Promise<E.Either<EditAbortedReason, string>> {
   const socket = await connectToEditServer();
 
@@ -117,11 +124,14 @@ export default async function run(
       }),
     );
 
+    onStageUpdate('upload');
+
     socket.send(video);
 
     await waitForOk(socket);
+    
+    onStageUpdate('edit');
 
-    // TODO: use zod
     const response = StatusMessage.parse(JSON.parse(await nextMessage(socket)));
 
     return match(response)
