@@ -90,6 +90,7 @@ const StatusMessage = z.discriminatedUnion("status", [
       "server_error",
       "edit_failed",
       "edit_locate_failed",
+      "edit_download_failed",
     ]),
   }),
 
@@ -99,10 +100,12 @@ const StatusMessage = z.discriminatedUnion("status", [
   }),
 ]);
 
+type EditAbortedReason = "locate_failed" | "download_failed";
+
 export default async function run(
   videoId: string,
   video: File,
-): Promise<E.Either<"locate_failed", string>> {
+): Promise<E.Either<EditAbortedReason, string>> {
   const socket = await connectToEditServer();
 
   try {
@@ -124,6 +127,9 @@ export default async function run(
     return match(response)
       .with({ status: "error", error: "edit_locate_failed" }, () => {
         return E.left("locate_failed" as const);
+      })
+      .with({ status: "error", error: "edit_download_failed" }, () => {
+        return E.left("download_failed" as const);
       })
       .with({ status: "error", error: P.select() }, (tag) => {
         throw new Error("response error:" + tag);

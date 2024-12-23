@@ -27,6 +27,7 @@ type EditStatus =
       url: string;
     }
   | { status: "audio_locate_failed" }
+  | { status: "download_failed" }
   | { status: "error" };
 
 interface FormModel {
@@ -39,6 +40,7 @@ interface FormModel {
   fileSelected: (element: any) => void;
   sendVideo: () => Promise<void>;
   resetStatus: () => void;
+  resetStatusAndLink: () => void;
 }
 
 function canEdit(model: FormModel): boolean {
@@ -57,7 +59,7 @@ function canEdit(model: FormModel): boolean {
 }
 
 const useFormModel = create<FormModel>((set, get) => ({
-  editStatus: { status: "done", url: "bruh" },
+  editStatus: { status: "none" },
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
@@ -87,7 +89,7 @@ const useFormModel = create<FormModel>((set, get) => ({
           errorMessage: `Your file is too big (maximum size is ${MAX_FILE_SIZE_NAME})`,
         });
       } else {
-        set({ gameplayVideo: file });
+        set({ gameplayVideo: file, errorMessage: null });
       }
     }
   },
@@ -115,7 +117,12 @@ const useFormModel = create<FormModel>((set, get) => ({
       pipe(
         await run(videoId, model.gameplayVideo!),
         E.match(
-          (_err) => set({ editStatus: { status: "audio_locate_failed" } }),
+          reason => 
+          match(reason)
+            .with('locate_failed', () => set({ editStatus: { status: "audio_locate_failed" } }))
+            .with('download_failed', () => set({ editStatus: { status: "download_failed" } }))
+            .exhaustive()
+          ,
           (downloadLink) =>
             set({ editStatus: { status: "done", url: downloadLink } }),
         ),
@@ -129,6 +136,10 @@ const useFormModel = create<FormModel>((set, get) => ({
   resetStatus: () => {
     set({ editStatus: { status: "none" } });
   },
+
+  resetStatusAndLink: () => {
+      set({editStatus: {status: 'none'}, youtubeUrl: ''})
+  }
 }));
 
 function looksLikeYoutubeLink(link: string): boolean {
@@ -239,6 +250,25 @@ export function TheForm() {
                   variant="secondary"
                 >
                   <small> Try another video </small>
+                </Button>
+              </div>
+            ))
+            .with({ status: "download_failed" }, () => (
+              <div>
+                <Button className="w-full mt-10" disabled>
+                  Nuh uh
+                </Button>
+
+                <div>
+                  <small> I've tried but can't download from the youtube link you provided, sorry. </small>
+                </div>
+
+                <Button
+                  className="w-full mt-2"
+                  onClick={model.resetStatusAndLink}
+                  variant="secondary"
+                >
+                  <small> Try again </small>
                 </Button>
               </div>
             ))
