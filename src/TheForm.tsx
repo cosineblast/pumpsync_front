@@ -40,7 +40,6 @@ interface FormModel {
   fileSelected: (element: any) => void;
   sendVideo: () => Promise<void>;
   resetStatus: () => void;
-  resetStatusAndLink: () => void;
 }
 
 function canEdit(model: FormModel): boolean {
@@ -115,13 +114,13 @@ const useFormModel = create<FormModel>((set, get) => ({
 
     try {
       pipe(
-        await run(videoId, 
+        await run(videoId,
                   model.gameplayVideo,
                  (stage) => {
                      set({ editStatus: { status: 'loading', stage: stage }})
                  }),
         E.match(
-          reason => 
+          reason =>
           match(reason)
             .with('locate_failed', () => set({ editStatus: { status: "audio_locate_failed" } }))
             .with('download_failed', () => set({ editStatus: { status: "download_failed" } }))
@@ -140,10 +139,6 @@ const useFormModel = create<FormModel>((set, get) => ({
   resetStatus: () => {
     set({ editStatus: { status: "none" } });
   },
-
-  resetStatusAndLink: () => {
-      set({editStatus: {status: 'none'}, youtubeUrl: ''})
-  }
 }));
 
 function looksLikeYoutubeLink(link: string): boolean {
@@ -276,7 +271,7 @@ export function TheForm() {
 
                 <Button
                   className="w-full mt-2"
-                  onClick={model.resetStatusAndLink}
+                  onClick={model.resetStatus}
                   variant="secondary"
                 >
                   <small> Try again </small>
