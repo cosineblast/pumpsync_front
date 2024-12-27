@@ -4,12 +4,21 @@ import * as z from "zod";
 
 import { match, P } from "ts-pattern";
 
-const backendPrefix =
-  import.meta.env["VITE_BACKEND_PREFIX"] ?? "ws://127.0.0.1:8000";
+const useTLS: boolean = 
+    import.meta.env["VITE_USE_TLS"] == 'true' 
+    ? true : false;
 
-const editEndpoint = `${backendPrefix}/api/edit`;
+const backendHost: string = 
+    import.meta.env["VITE_BACKEND_HOST"];
+
+const ws = useTLS ? 'wss' : 'ws';
+const http = useTLS ? 'https' : 'http';
+
 
 function connectToEditServer(): Promise<WebSocket> {
+
+  const editEndpoint = `${ws}://${backendHost}/api/edit`;
+
   return new Promise((resolve, reject) => {
     let socket: WebSocket;
 
@@ -108,7 +117,7 @@ type EditAbortedReason = "locate_failed" | "download_failed";
 // (e.g extracting audio, detecting phoenix or XX start etc)
 export type UpdateStage = 'upload' | 'edit';
 
-export default async function run(
+export async function edit(
   videoId: string,
   video: File,
   onStageUpdate: (update: UpdateStage) => void,
@@ -154,4 +163,17 @@ export default async function run(
   } finally {
     socket.close();
   }
+}
+
+export async function status(): Promise<boolean> {
+    const statusEndpoint = `${http}://${backendHost}/api/status`;
+
+    try {
+        const thing = await fetch(statusEndpoint);
+
+        return thing.ok
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
 }

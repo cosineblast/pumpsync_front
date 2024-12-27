@@ -1,19 +1,20 @@
 import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { create } from "zustand";
 
-import run, { UpdateStage } from "@/client";
+import { edit, status, UpdateStage } from "@/client";
 
-import { Loader2, TriangleAlert } from "lucide-react";
+import { AlertCircle, Loader2, TriangleAlert } from "lucide-react";
 
 import { match, P } from "ts-pattern";
 
 import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
 import { parseYoutubeLink } from "./parseYoutube";
+import { useEffect } from "react";
 
 const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
@@ -30,12 +31,17 @@ type EditStatus =
   | { status: "download_failed" }
   | { status: "error" };
 
+type ServerStatus = 'unknown' | 'down' | 'up'
+
 interface FormModel {
+
   youtubeUrl: string;
   gameplayVideo: File | null;
   errorMessage: string | null;
   editStatus: EditStatus;
+  serverStatus: ServerStatus;
 
+  started: () => void;
   urlTyped: (url: string) => void;
   fileSelected: (element: any) => void;
   sendVideo: () => Promise<void>;
@@ -62,6 +68,16 @@ const useFormModel = create<FormModel>((set, get) => ({
   youtubeUrl: "",
   gameplayVideo: null,
   errorMessage: null,
+
+  serverStatus: 'unknown',
+
+  started: async () => {
+    if (await status()) {
+      set({ serverStatus: 'up' })
+    } else {
+      set({ serverStatus: 'down' })
+    }
+  },
 
   urlTyped: (link: string) => {
     if (link === "") {
@@ -114,7 +130,7 @@ const useFormModel = create<FormModel>((set, get) => ({
 
     try {
       pipe(
-        await run(videoId,
+        await edit(videoId,
                   model.gameplayVideo,
                  (stage) => {
                      set({ editStatus: { status: 'loading', stage: stage }})
@@ -148,6 +164,8 @@ function looksLikeYoutubeLink(link: string): boolean {
 export function TheForm() {
   const model = useFormModel();
 
+  useEffect(() => { model.started() }, []);
+
   return (
     <div className="flex justify-center mt-5 items-center grow">
       <div className="w-full mx-3 sm:max-w-96 lg:min-w-96 bg-zinc-900 rounded-md p-5">
@@ -170,7 +188,9 @@ export function TheForm() {
 
           />
 
-          <small> Max filesize: 500MB </small>
+          <div>
+            <small> Limits: 500MB, 3 minutes </small>
+          </div>
         </div>
 
         {model.errorMessage !== null ? (
@@ -185,7 +205,22 @@ export function TheForm() {
         )}
 
         {
-          // TODO: use pattern matching lib
+          match(model.serverStatus)
+          .with('unknown', () => <></>)
+          .with('up', () => <></>)
+          .with('down', () =>
+
+                <Alert className="mt-3">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Sorreh</AlertTitle>
+
+                <AlertDescription> The pumpsync is down at the moment </AlertDescription>
+                </Alert>
+                )
+          .exhaustive()
+        }
+
+        {
           match(model.editStatus)
             .with({ status: "done", url: P.select() }, (url) => (
               <a href={url}>
