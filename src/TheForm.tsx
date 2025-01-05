@@ -214,7 +214,7 @@ export function TheForm() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Sorreh</AlertTitle>
 
-                <AlertDescription> The pumpsync is down at the moment </AlertDescription>
+                <AlertDescription> The pumpsync backend is down at the moment </AlertDescription>
                 </Alert>
                 )
           .exhaustive()
